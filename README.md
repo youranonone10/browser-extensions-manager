@@ -16,7 +16,7 @@ A responsive web interface for managing browser extensions with real-time search
 
 ## Demo
 
-[Live Demo](https://yourusername.github.io/browser-extensions-manager)
+[Live Demo](https://youranonone10.github.io/browser-extensions-manager/)
 
 ## Installation
 
