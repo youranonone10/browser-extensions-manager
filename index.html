@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png">
+  <title>Browser Extensions Manager</title>
+  <style>
+    :root {
+      --primary-color: #4a6bff;
+      --secondary-color: #f5f7ff;
+      --danger-color: #ff4a4a;
+      --text-color: #333;
+      --light-text: #777;
+      --border-color: #e0e0e0;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f9f9f9;
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    
+    h1 {
+      font-size: 28px;
+      color: var(--primary-color);
+    }
+    
+    .filter-tabs {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .tab {
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .tab.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    
+    .tab:not(.active):hover {
+      background-color: var(--secondary-color);
+    }
+    
+    .search-bar {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    
+    .search-bar input {
+      width: 100%;
+      padding: 10px 15px 10px 40px;
+      border: 1px solid var(--border-color);
+      border-radius: 25px;
+      font-size: 16px;
+    }
+    
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--light-text);
+    }
+    
+    .extensions-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .extension-card {
+      background-color: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .extension-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .extension-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+    
+    .extension-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .extension-logo {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+    
+    .extension-name {
+      font-weight: 600;
+      font-size: 18px;
+    }
+    
+    .extension-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: var(--primary-color);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    .extension-description {
+      color: var(--light-text);
+      margin-bottom: 15px;
+      font-size: 14px;
+      flex-grow: 1;
+    }
+    
+    .extension-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .remove-btn {
+      background-color: var(--danger-color);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+    
+    .remove-btn:hover {
+      background-color: #e04040;
+    }
+    
+    .status-badge {
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .status-badge.inactive {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+    
+    .attribution {
+      margin-top: 40px;
+      font-size: 11px;
+      text-align: center;
+      color: var(--light-text);
+    }
+    
+    .attribution a {
+      color: var(--primary-color);
+    }
+    
+    @media (max-width: 768px) {
+      .extensions-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Extensions Manager</h1>
+    </header>
+    
+    <div class="filter-tabs">
+      <div class="tab active" data-filter="all">All</div>
+      <div class="tab" data-filter="active">Active</div>
+      <div class="tab" data-filter="inactive">Inactive</div>
+    </div>
+    
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search extensions..." id="searchInput">
+    </div>
+    
+    <div class="extensions-list" id="extensionsList">
+      <!-- Extensions will be dynamically inserted here -->
+      <div class="loading">Loading extensions...</div>
+    </div>
+    
+    <div class="attribution">
+      Challenge by <a href="https://www.frontendmentor.io?ref=challenge">Frontend Mentor</a>. 
+      Coded by <a href="#">Aman Singh</a>.
+    </div>
+  </div>
+
+  <script>
+    // DOM elements
+    const extensionsList = document.getElementById('extensionsList');
+    const tabs = document.querySelectorAll('.tab');
+    const searchInput = document.getElementById('searchInput');
+
+    // Current filter state
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let extensionsData = [];
+
+    // Fetch extensions data
+    async function fetchExtensions() {
+      try {
+        // In a real app, you would fetch from a JSON file or API
+        // const response = await fetch('data.json');
+        // extensionsData = await response.json();
+        
+        // Using the provided data directly
+        extensionsData = [
+          {
+            "logo": "./assets/images/logo-devlens.svg",
+            "name": "DevLens",
+            "description": "Quickly inspect page layouts and visualize element boundaries.",
+            "isActive": true
+          },
+          {
+            "logo": "./assets/images/logo-style-spy.svg",
+            "name": "StyleSpy",
+            "description": "Instantly analyze and copy CSS from any webpage element.",
+            "isActive": true
+          },
+          {
+            "logo": "./assets/images/logo-speed-boost.svg",
+            "name": "SpeedBoost",
+            "description": "Optimizes browser resource usage to accelerate page loading.",
+            "isActive": false
+          },
+          {
+            "logo": "./assets/images/logo-json-wizard.svg",
+            "name": "JSONWizard",
+            "description": "Formats, validates, and prettifies JSON responses in-browser.",
+            "isActive": true
+          },
+          {
+            "logo": "./assets/images/logo-tab-master-pro.svg",
+            "name": "TabMaster Pro",
+            "description": "Organizes browser tabs into groups and sessions.",
+            "isActive": true
+          },
+          {
+            "logo": "./assets/images/logo-viewport-buddy.svg",
+            "name": "ViewportBuddy",
+            "description": "Simulates various screen resolutions directly within the browser.",
+            "isActive": false
+          },
+          {
+            "logo": "./assets/images/logo-markup-notes.svg",
+            "name": "Markup Notes",
+            "description": "Enables annotation and notes directly onto webpages for collaborative debugging.",
+            "isActive": true
+          },
+          {
+            "logo": "./assets/images/logo-grid-guides.svg",
+            "name": "GridGuides",
+            "description": "Overlay customizable grids and alignment guides on any webpage.",
+            "isActive": false
+          },
+          {
+            "logo": "./assets/images/logo-palette-picker.svg",
+            "name": "Palette Picker",
+            "description": "Instantly extracts color palettes from any webpage.",
+            "isActive": true
+          },
+          {
+            "logo": "./assets/images/logo-link-checker.svg",
+            "name": "LinkChecker",
+            "description": "Scans and highlights broken links on any page.",
+            "isActive": true
+          },
+          {
+            "logo": "./assets/images/logo-dom-snapshot.svg",
+            "name": "DOM Snapshot",
+            "description": "Capture and export DOM structures quickly.",
+            "isActive": false
+          },
+          {
+            "logo": "./assets/images/logo-console-plus.svg",
+            "name": "ConsolePlus",
+            "description": "Enhanced developer console with advanced filtering and logging.",
+            "isActive": true
+          }
+        ];
+        
+        renderExtensions();
+      } catch (error) {
+        console.error('Error loading extensions:', error);
+        extensionsList.innerHTML = '<p class="error">Failed to load extensions. Please try again later.</p>';
+      }
+    }
+
+    // Render extensions based on current filter and search
+    function renderExtensions() {
+      extensionsList.innerHTML = '';
+      
+      const filteredExtensions = extensionsData.filter(ext => {
+        // Apply filter
+        if (currentFilter === 'active' && !ext.isActive) return false;
+        if (currentFilter === 'inactive' && ext.isActive) return false;
+        
+        // Apply search
+        if (currentSearch) {
+          const searchLower = currentSearch.toLowerCase();
+          return ext.name.toLowerCase().includes(searchLower) || 
+                 ext.description.toLowerCase().includes(searchLower);
+        }
+        
+        return true;
+      });
+      
+      if (filteredExtensions.length === 0) {
+        extensionsList.innerHTML = '<p class="no-results">No extensions found matching your criteria.</p>';
+        return;
+      }
+      
+      filteredExtensions.forEach(ext => {
+        const extensionCard = document.createElement('div');
+        extensionCard.className = 'extension-card';
+        extensionCard.innerHTML = `
+          <div class="extension-header">
+            <div class="extension-info">
+              <img src="${ext.logo}" alt="${ext.name} logo" class="extension-logo">
+              <div>
+                <div class="extension-name">${ext.name}</div>
+                <div class="status-badge ${ext.isActive ? '' : 'inactive'}">
+                  ${ext.isActive ? 'Active' : 'Inactive'}
+                </div>
+              </div>
+            </div>
+            <div class="extension-status">
+              <label class="switch">
+                <input type="checkbox" ${ext.isActive ? 'checked' : ''} data-id="${ext.name}">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="extension-description">${ext.description}</div>
+          <div class="extension-actions">
+            <button class="remove-btn" data-id="${ext.name}">Remove</button>
+          </div>
+        `;
+        extensionsList.appendChild(extensionCard);
+      });
+      
+      // Add event listeners to switches
+      document.querySelectorAll('.switch input').forEach(switchEl => {
+        switchEl.addEventListener('change', function() {
+          const extName = this.dataset.id;
+          const extension = extensionsData.find(ext => ext.name === extName);
+          if (extension) {
+            extension.isActive = this.checked;
+            renderExtensions();
+          }
+        });
+      });
+      
+      // Add event listeners to remove buttons
+      document.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          if (confirm('Are you sure you want to remove this extension?')) {
+            const extName = this.dataset.id;
+            const index = extensionsData.findIndex(ext => ext.name === extName);
+            if (index !== -1) {
+              extensionsData.splice(index, 1);
+              renderExtensions();
+            }
+          }
+        });
+      });
+    }
+
+    // Initialize tabs
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        tabs.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        currentFilter = this.dataset.filter;
+        renderExtensions();
+      });
+    });
+
+    // Initialize search
+    searchInput.addEventListener('input', function() {
+      currentSearch = this.value.trim();
+      renderExtensions();
+    });
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', fetchExtensions);
+  </script>
+</body>
+</html>
